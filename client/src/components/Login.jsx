@@ -1,45 +1,85 @@
-import { useState } from "react";
-import axios from 'axios';
-// import { json } from "react-router-dom";
+import { useContext, useState } from "react";
+import axios from "axios";
+import { Navigate } from "react-router-dom";
+import { Context } from "../main";
+import { toast } from "react-hot-toast";
+import { server } from "../main";
 
-
-// http://localhost:5000/auth/login
 const Login = () => {
+  const { isAuthenticated, setIsAuthenticated, loading, setLoading } =
+    useContext(Context);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
+  if (isAuthenticated) return <Navigate to={"/profile"} />;
 
-    const [user, setUser] = useState({
-        email: '',
-        password: ''
-    });
-
-    const handleInput = (e) => {
-        setUser({...user, [e.target.name]:e.target.value})
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const { data } = await axios.post(
+        `${server}/auth/login`,
+        { email, password },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+      console.log(data);
+      toast.success(data.message);
+      setIsAuthenticated(true);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+      console.log(error);
+      setLoading(false);
+      setIsAuthenticated(false);
     }
+  };
+  return (
+    <div className="formContainer">
+      <form onSubmit={submitHandler}>
+        <h3>Sign In</h3>
+        <div className="col-sm-12 mb-3 form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="form-control"
+            name="email"
+            id="email"
+            placeholder="Enter your email."
+            required
+          />
+        </div>
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        await axios.post('http://localhost:5000/auth/login', {email: user.email, password: user.password})
-        .then(response => console.log(response)) 
-        .catch(err => console.log(err))
-
-    }
-
-  return (    
-    <div>
-        <form onSubmit={handleSubmit}>
-            <label htmlFor="email" >Email</label>
-            <input type="email" name="email" onChange={handleInput}/>
-
-            <label htmlFor="password">
-                Password
-             </label>
-            <input type="password" name="password" onChange={handleInput}/>
-
-            <button type="submit">Submit</button>
-        </form>
+        <div className="col-sm-12 mb-2 form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="Password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="form-control"
+            id="password"
+            placeholder="Enter your password."
+            required
+          />
+        </div>
+        <div className="d-grid">
+          <button disabled={loading} type="submit" className="btn btn-primary">
+            Submit
+          </button>
+        </div>
+        <p className="forgot-password text-right">
+          Forgot <a href="#">password?</a>
+        </p>
+      </form>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

@@ -3,10 +3,13 @@ const User = require("../models/user.model");
 const Product = require("../models/productModel");
 const express = require("express");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
 
-router.get("/profile", (req, res) => {
-  const person = req.user;
-  res.render("profile", { person });
+router.get("/profile", async (req, res) => {
+  return res.status(200).json({
+    success: "jai",
+    user: req.user,
+  });
 });
 // SHOW EMPLOYEES UNDER A MANAGER
 router.get("/head/:id", async (req, res) => {
@@ -15,9 +18,7 @@ router.get("/head/:id", async (req, res) => {
   // console.log(manager);
 
   const managerEmail = manager.email;
-  // console.log(managerEmail);
 
-  // Find all employees under manager
   const employees = await User.find({ managedBy: managerEmail });
   // console.log(employees);
   res.render("employeeDashboard", { employees: employees });
@@ -32,7 +33,5 @@ router.get("/:id", async (req, res, next) => {
     next(error);
   }
 });
-
-
 
 module.exports = router;

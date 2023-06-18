@@ -1,29 +1,73 @@
-import 'bootstrap/dist/css/bootstrap.min.css'
-import { NavLink } from 'react-router-dom'
+import React, { useContext } from "react";
+import Nav from "react-bootstrap/Nav";
+import Navbar from "react-bootstrap/Navbar";
+import { LinkContainer } from "react-router-bootstrap";
+import { Context, server } from "../main";
+import { toast } from "react-hot-toast";
+import axios from "axios";
 
-const Navbar = () => {
+function NavigationBar() {
+  const { isAuthenticated, setIsAuthenticated, loading, setLoading, setUser } =
+    useContext(Context);
+  const logoutHandler = async (e) => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get(`${server}/auth/logout`, {
+        withCredentials: true,
+      });
+      toast.success("Logged Out Successfully");
+      setIsAuthenticated(false);
+      setLoading(false);
+      setUser({});
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+      console.log(error);
+      setIsAuthenticated(true);
+    }
+  };
+
   return (
-    <div>
-        <nav className="navbar navbar-expand-lg navbar-light bg-light">
-  <NavLink className="navbar-brand" to="#"><h1>Praedico</h1></NavLink>
-  <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span className="navbar-toggler-icon"></span>
-  </button>
+    <Navbar bg="light" expand="lg" className="px-4">
+      <Navbar.Brand href="/">Praedico</Navbar.Brand>
+      <Navbar.Toggle aria-controls="basic-navbar-nav" />
+      <Navbar.Collapse id="basic-navbar-nav" style={{ justifyContent: "end" }}>
+        <div className="d-flex gap-5 mx-4">
+          <LinkContainer to="/">
+            <Nav.Link>Home</Nav.Link>
+          </LinkContainer>
+          {!isAuthenticated ? (
+            <LinkContainer to="/register">
+              <Nav.Link>Register</Nav.Link>
+            </LinkContainer>
+          ) : (
+            <></>
+          )}
 
-  <div className="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul className="navbar-nav ml-auto">
-      <li className="nav-item active">
-        <NavLink className="nav-link" to="/">Home</NavLink>
-      </li>
-      <li className="nav-item">
-        <NavLink className="nav-link" to="/login">Login</NavLink>
-      </li>
-    </ul>
-
-  </div>
-</nav>
-    </div>
-  )
+          {isAuthenticated ? (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={logoutHandler}
+              className="btn btn-dark btn-sm"
+            >
+              LogOut
+            </button>
+          ) : (
+            <LinkContainer to="/login">
+              <Nav.Link>Login</Nav.Link>
+            </LinkContainer>
+          )}
+          {isAuthenticated ? (
+            <LinkContainer to="/profile">
+              <Nav.Link>Profile</Nav.Link>
+            </LinkContainer>
+          ) : (
+            <></>
+          )}
+        </div>
+      </Navbar.Collapse>
+    </Navbar>
+  );
 }
 
-export default Navbar
+export default NavigationBar;

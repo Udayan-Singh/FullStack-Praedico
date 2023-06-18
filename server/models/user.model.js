@@ -4,16 +4,16 @@ const bcrypt = require("bcrypt");
 const { roles } = require("../utils/constants");
 
 const userSchema = new mongoose.Schema({
-  // email: {
-  //   type: String,
-  //   required: true,
-  //   lowercase: true,
-  //   unique: true,
-  // },
-  // password: {
-  //   type: String,
-  //   required: true,
-  // },
+  email: {
+    type: String,
+    required: true,
+    lowercase: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
   // role: {
   //   type: String,
   //   enum: [roles.admin, roles.head, roles.emp],
@@ -25,89 +25,82 @@ const userSchema = new mongoose.Schema({
   //   lowercase: true,
   //   required: true,
   // },
-  email: {
-    type: String,
-    required: [true, "Please add email"],
-    unique: [true, "Email address already taken"],
-    lowercase: true,
-  },
+  // email: {
+  //   type: String,
+  //   required: [true, "Please add email"],
+  //   unique: [true, "Email address already taken"],
+  //   lowercase: true,
+  // },
 
-  password: {
-    type: String,
-    required: [true, "Please add password"],
-  },
+  // password: {
+  //   type: String,
+  //   required: [true, "Please add password"],
+  // },
 
-  fname: {
-    type: String,
-    required: [true, "Please add first name"],
-  },
-
-  lname: {
+  name: {
     type: String,
     required: [true, "Please add first name"],
   },
 
-  contact: {
-    type: String,
-    required: [true, "Please add contact number"],
-  },
+  // lname: {
+  //   type: String,
+  //   required: [true, "Please add first name"],
+  // },
 
-  aadhar: {
-    type: String,
-    required: [true, "Please add aadhar number"],
-  },
+  // contact: {
+  //   type: String,
+  //   required: [true, "Please add contact number"],
+  // },
 
-  address: {
-    type: String,
-    required: [true, "Please add address"],
-  },
+  // aadhar: {
+  //   type: String,
+  //   required: [true, "Please add aadhar number"],
+  // },
 
-  pincode: {
-    type: String,
-    required: [true, "Please add pincode"],
-  },
+  // address: {
+  //   type: String,
+  //   required: [true, "Please add address"],
+  // },
 
-  city: {
-    type: String,
-    required: [true, "Please add city"],
-  },
+  // pincode: {
+  //   type: String,
+  //   required: [true, "Please add pincode"],
+  // },
 
-  institute: {
-    type: String,
-    required: [true, "Please add institute."],
-  },
+  // city: {
+  //   type: String,
+  //   required: [true, "Please add city"],
+  // },
 
-  description: {
-    type: String,
-  },
+  // institute: {
+  //   type: String,
+  //   required: [true, "Please add institute."],
+  // },
 
-  role: {
-    type: String,
-    enum: [roles.admin, roles.head, roles.emp, roles.intern],
-    default: roles.emp,
-    required: [true, "Please add role."],
-  },
+  // description: {
+  //   type: String,
+  // },
 
-  startsAt: {
-    type: Date,
-    required: [true, "Please add start date"],
-  },
+  // role: {
+  //   type: String,
+  //   enum: [roles.admin, roles.head, roles.emp, roles.intern],
+  //   default: roles.emp,
+  //   required: [true, "Please add role."],
+  // },
 
-  endsAt: {
-    type: Date,
-    required: [true, "Please add end date."],
-  },
+  // startsAt: {
+  //   type: Date,
+  //   required: [true, "Please add start date"],
+  // },
 
-  managedBy: {
-    type: String,
-  },
+  // endsAt: {
+  //   type: Date,
+  //   required: [true, "Please add end date."],
+  // },
+
+  // managedBy: {
+  //   type: String,
+  // },
 });
-userSchema.methods.isValidPassword = async function (password) {
-  try {
-    return await bcrypt.compare(password, this.password);
-  } catch (error) {
-    throw createHttpError.InternalServerError(error.message);
-  }
-};
 
 module.exports = mongoose.model("user", userSchema);

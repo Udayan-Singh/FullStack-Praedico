@@ -2,143 +2,57 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
-const { body, validationResult } = require("express-validator");
-const { ensureLoggedOut, ensureLoggedIn } = require("connect-ensure-login");
-const passport = require("passport");
-const { roles } = require("../utils/constants");
+const jwt = require("jsonwebtoken");
 
-router.get(
-  "/login",
-  ensureLoggedOut({ redirectTo: "/" }),
-  async (req, res, next) => {
-    res.render("login");
+const setCookie = require("../utils/feature");
+
+const { ErrorHandler } = require("../middlewares/error");
+
+router.post("/login", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(new ErrorHandler("Invalid Email or Password", 400));
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return next(new ErrorHandler("Invalid Email or Password", 400));
+    }
+    setCookie(user, res, `Welcome Back ${user.name}`, 200);
+  } catch (error) {
+    next(error);
   }
-);
-router.post('/login', async (req,res) => {
-  const {email, password} = req.body;
-
-  console.log(email,password);
-  const user = await User.findOne({email});
-
-
-  if(user && await bcrypt.compare(password, user.password)){
-    res.redirect("/dashboard");
-  }
-
-  else{
-    console.log("Invalid credentials");
-  }
-  
-})
-router.get("/register", async (req, res, next) => {
-  res.render("register");
 });
 
-router.post(
-  "/register",
-  [
-    body("email")
-      .trim()
-      .isEmail()
-      .withMessage("Email must be a valid email")
-      .normalizeEmail()
-      .toLowerCase(),
-    body("password")
-      .trim()
-      .isLength(2)
-      .withMessage("Password length is too short, min 2 char required"),
-    body("password2").custom((value, { req }) => {
-      if (value != req.body.password) {
-        throw new Error("Password do not match");
-      }
-      return true;
-    }),
-  ],
-  async (req, res, next) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        errors.array().forEach((error) => {
-          req.flash("error", error.msg);
-        });
-        res.render("register", {
-          email: req.body.email,
-          messages: req.flash(),
-        });
-        return;
-      }
-      console.log(req.body);
-      const {
-        email,
-        password,
-        fname,
-        lname,
-        aadhar,
-        address,
-        city,
-        pincode,
-        institute,
-        role,
-        startsAt,
-        endsAt,
-        contact,
-        description,
-        managedBy,
-      } = req.body;
-      const doesExist = await User.findOne({ email });
-      if (doesExist) {
-        req.flash("error", `${email} Email already exists`);
-        res.redirect("/auth/register");
-        return;
-      }
-      //encryting password
-      const encryptedPassword = await bcrypt.hash(password, 10);
-      const newUser = await User.create({
-        email,
-        password: encryptedPassword,
-        fname,
-        lname,
-        aadhar,
-        address,
-        city,
-        pincode,
-        institute,
-        role,
-        startsAt,
-        endsAt,
-        contact,
-        description,
-        managedBy,
-      });
-      // console.log(newUser.email);
-      // console.log(process.env.ADMIN_EMAIL);
-      // if (newUser.email === process.env.ADMIN_EMAIL) {
-      //   newUser.role = roles.admin;
-      // }
-      await User.findOneAndUpdate(
-        { email: process.env.ADMIN_EMAIL.toLowerCase() },
-        {
-          role: roles.admin,
-        }
-      );
+router.post("/register", async (req, res, next) => {
+  try {
+    const { email, password, name } = req.body;
 
-      req.flash(
-        "success",
-        `${newUser.email} registered sucessfully, you can now login`
-      );
-      res.redirect("/auth/login");
-    } catch (error) {
-      next(error);
+    let user = await User.findOne({ email });
+    if (user) {
+      return next(new ErrorHandler("User Already Exist", 404));
     }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user = await User.create({
+      email,
+      password: hashedPassword,
+      name,
+    });
+    setCookie(user, res, "Registered Successfully", 201);
+  } catch (error) {
+    next(error);
   }
-);
-router.get("/logout", ensureLoggedIn({ redirectTo: "/" }), async (req, res) => {
-  req.logout(function (err) {
-    if (err) {
-      return next(err);
-    }
-    res.redirect("/");
-  });
+});
+router.get("/logout", (req, res) => {
+  res
+    .status(200)
+    .cookie("token", "", { expires: new Date(Date.now()) })
+    .json({
+      success: true,
+      message: "Logged Out",
+    });
 });
 
 module.exports = router;
